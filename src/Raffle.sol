@@ -8,6 +8,8 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     /* ERRORS */
     error Raffle__AlreadyEntered();
     error Raffle__NotEnoughFunds();
+    error Raffle__NotOpened();
+
     /* TYPES */
     enum State {
         Opened,
@@ -20,6 +22,7 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
 
     uint256 private immutable i_minEntryFee;
 
+    State private s_state;
     uint8 private s_participantsCount;
     uint256 private s_valueToPayToWinner;
     uint256 private s_feesCollected;
@@ -54,10 +57,16 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         address entrant = msg.sender;
         uint256 amount = msg.value;
 
+        require(s_state == State.Opened, Raffle__NotOpened());
         require(!s_participantsEntered[entrant], Raffle__AlreadyEntered());
         require(amount >= i_minEntryFee, Raffle__NotEnoughFunds());
 
         s_participants.push(entrant);
+
+        if (s_participants.length == s_participantsCount) {
+            s_state = State.Closed;
+        }
+
         s_participantsEntered[entrant] = true;
         uint256 feeCollected = _collectFee(amount);
         s_valueToPayToWinner += amount - feeCollected;
@@ -72,7 +81,9 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         override
         returns (bool upkeepNeeded, bytes memory /* performData */)
     {
-        upkeepNeeded = s_participants.length >= s_participantsCount;
+        bool closed = s_state == State.Closed;
+        bool participantsFull = s_participants.length >= s_participantsCount;
+        upkeepNeeded = closed && participantsFull;
     }
 
     function performUpkeep(bytes calldata /* performData */) external override {
