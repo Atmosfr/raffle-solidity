@@ -100,7 +100,7 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
 
     function performUpkeep(bytes calldata /* performData */) external override {
         if (_checkConditions()) {
-            uint256 requestId = s_vrfCoordinator.requestRandomWords(
+            s_vrfCoordinator.requestRandomWords(
                 VRFV2PlusClient.RandomWordsRequest({
                     keyHash: i_keyHash,
                     subId: i_subscriptionId,
@@ -120,11 +120,45 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         return s_lastWinner;
     }
 
+    function getKeyHash() external view returns (bytes32) {
+        return i_keyHash;
+    }
+
+    function getSubscriptionId() external view returns (uint256) {
+        return i_subscriptionId;
+    }
+
+    function getMinEntryFee() external view returns (uint256) {
+        return i_minEntryFee;
+    }
+
+    function getFeesCollected() external view returns (uint256) {
+        return s_feesCollected;
+    }
+
+    function getParticipantsCount() external view returns (uint8) {
+        return s_participantsCount;
+    }
+
+    function getParticipants()
+        external
+        view
+        returns (address payable[] memory)
+    {
+        return s_participants;
+    }
+
+    function getParticipantEntered(
+        address participant
+    ) external view returns (bool) {
+        return s_participantsEntered[participant];
+    }
+
     /* PUBLIC FUNCTIONS */
     /* INTERNAL FUNCTIONS */
 
     function fulfillRandomWords(
-        uint256 requestId,
+        uint256 /* requestId */,
         uint256[] calldata randomWords
     ) internal override {
         uint256 randomNumber = randomWords[0];
