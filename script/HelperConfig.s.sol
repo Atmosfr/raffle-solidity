@@ -15,6 +15,7 @@ contract HelperConfig is Script {
         address vrfCoordinatorAddress;
         bytes32 keyHash;
         uint32 callbackGasLimit;
+        uint256 subscriptionId;
     }
 
     NetworkConfig public activeNetworkConfig;
@@ -32,7 +33,8 @@ contract HelperConfig is Script {
             NetworkConfig({
                 vrfCoordinatorAddress: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
                 keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae
-                callbackGasLimit: CALLBACK_GAS_LIMIT
+                callbackGasLimit: CALLBACK_GAS_LIMIT,
+                subscriptionId: 0
                 //linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789
             });
     }
@@ -60,7 +62,8 @@ contract HelperConfig is Script {
             NetworkConfig({
                 vrfCoordinatorAddress: address(vrfCoordinator),
                 keyHash: bytes32(0),
-                callbackGasLimit: CALLBACK_GAS_LIMIT
+                callbackGasLimit: CALLBACK_GAS_LIMIT,
+                subscriptionId: subId
             });
     }
 }
