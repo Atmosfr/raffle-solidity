@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Script} from "forge-std/Script.sol";
-import {HelperConfig} from "../HelperConfig.s.sol";
+import {HelperConfig} from "./HelperConfig.s.sol";
 import {Raffle} from "../src/Raffle.sol";
 
 contract DeployRaffle is Script {
@@ -10,13 +10,13 @@ contract DeployRaffle is Script {
         uint8 participantsCount,
         uint256 minEntryFee
     ) external returns (Raffle, HelperConfig) {
-        HelperConfig helperConfig = HelperConfig();
+        HelperConfig helperConfig = new HelperConfig();
         HelperConfig.NetworkConfig memory networkConfig = helperConfig
-            .activeNetworkConfig;
+            .getConfig();
 
         vm.startBroadcast();
-        raffle = new Raffle(
-            networkConfig.vrfCoordinatorAddress,
+        Raffle raffle = new Raffle(
+            networkConfig.vrfCoordinatorV2_5,
             networkConfig.keyHash,
             networkConfig.callbackGasLimit,
             participantsCount,
