@@ -35,6 +35,7 @@ contract RaffleTest is Test {
         assertEq(raffle.getMinEntryFee(), minEntryFee);
         assertEq(raffle.getKeyHash(), keyHash);
         assertEq(address(raffle.s_vrfCoordinator()), vrfCoordinatorV2_5);
-        //assertEq(raffle.getSubscriptionId(), subscriptionId);
+        assertEq(raffle.getSubscriptionId(), subscriptionId);
+        assertEq(raffle.getCallbackGasLimit(), callbackGasLimit);
     }
 }
