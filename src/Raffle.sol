@@ -40,6 +40,7 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     /* EVENTS */
     event ParticipantEntered(address indexed participant, uint256 amount);
     event FeeCollected(uint256 amount);
+    event FeeWithdrawn(address indexed to, uint256 amount);
     event WinnerPaid(address indexed winner, uint256 amount);
 
     /* MODIFIERS */
@@ -85,6 +86,14 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         uint256 feeCollected = _collectFee(amount);
         s_valueToPayToWinner += amount - feeCollected;
         emit ParticipantEntered(entrant, amount);
+    }
+
+    function withdrawFees(address to) external onlyOwner {
+        uint256 amount = s_feesCollected;
+        s_feesCollected = 0;
+        (bool success, ) = to.call{value: amount}("");
+        require(success, Raffle__FailedToPay());
+        emit FeeWithdrawn(to, amount);
     }
 
     function checkUpkeep(
