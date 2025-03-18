@@ -44,6 +44,7 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     event FeeCollected(uint256 amount);
     event FeeWithdrawn(address indexed to, uint256 amount);
     event WinnerPaid(address indexed winner, uint256 amount);
+    event WinnerRequested();
 
     /* MODIFIERS */
     /* CONSTRUCTOR */
@@ -126,6 +127,8 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
                     )
                 })
             );
+            s_state = State.Closed;
+            emit WinnerRequested();
         }
     }
 
@@ -205,8 +208,8 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     }
 
     function _checkConditions() private view returns (bool) {
-        bool closed = s_state == State.Closed;
-        bool participantsFull = s_participants.length >= s_participantsCount;
-        return closed && participantsFull;
+        bool opened = s_state == State.Opened;
+        bool participantsEnough = s_participants.length >= s_participantsCount;
+        return opened && participantsEnough;
     }
 }
