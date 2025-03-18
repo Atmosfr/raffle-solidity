@@ -13,6 +13,7 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     error Raffle__FailedToPay();
     error Raffle__ZeroAmount();
     error Raffle__ZeroAddress();
+    error Raffle__UpkeepNotNeeded();
 
     /* TYPES */
     enum State {
@@ -129,6 +130,8 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
             );
             s_state = State.Closed;
             emit WinnerRequested();
+        } else {
+            revert Raffle__UpkeepNotNeeded();
         }
     }
 
@@ -210,6 +213,7 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     function _checkConditions() private view returns (bool) {
         bool opened = s_state == State.Opened;
         bool participantsEnough = s_participants.length >= s_participantsCount;
-        return opened && participantsEnough;
+        bool enoughFunds = s_valueToPayToWinner > 0;
+        return opened && participantsEnough && enoughFunds;
     }
 }
