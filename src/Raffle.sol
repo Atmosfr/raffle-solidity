@@ -81,11 +81,6 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         require(amount >= i_minEntryFee, Raffle__NotEnoughFunds());
 
         s_participants.push(entrant);
-
-        if (s_participants.length == s_participantsCount) {
-            s_state = State.Closed;
-        }
-
         s_participantsEntered[entrant] = true;
         uint256 feeCollected = _collectFee(amount);
         s_valueToPayToWinner += amount - feeCollected;
@@ -139,6 +134,10 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         return s_lastWinner;
     }
 
+    function getCurrentWinnerPrize() external view returns (uint256) {
+        return s_valueToPayToWinner;
+    }
+
     function getKeyHash() external view returns (bytes32) {
         return i_keyHash;
     }
@@ -175,6 +174,10 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         address participant
     ) external view returns (bool) {
         return s_participantsEntered[participant];
+    }
+
+    function getFeeRate() external pure returns (uint256) {
+        return OWNER_FEE;
     }
 
     /* PUBLIC FUNCTIONS */
