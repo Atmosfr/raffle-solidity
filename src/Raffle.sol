@@ -11,6 +11,8 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     error Raffle__NotEnoughFunds();
     error Raffle__NotOpened();
     error Raffle__FailedToPay();
+    error Raffle__ZeroAmount();
+    error Raffle__ZeroAddress();
 
     /* TYPES */
     enum State {
@@ -89,7 +91,9 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
     }
 
     function withdrawFees(address to) external onlyOwner {
+        require(to != address(0), Raffle__ZeroAddress());
         uint256 amount = s_feesCollected;
+        require(amount > 0, Raffle__ZeroAmount());
         s_feesCollected = 0;
         (bool success, ) = to.call{value: amount}("");
         require(success, Raffle__FailedToPay());
