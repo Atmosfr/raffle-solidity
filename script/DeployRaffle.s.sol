@@ -7,8 +7,7 @@ import {Raffle} from "../src/Raffle.sol";
 
 contract DeployRaffle is Script {
     function run(
-        uint8 participantsCount,
-        uint256 minEntryFee
+        uint8 participantsCount
     ) external returns (Raffle, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
         HelperConfig.NetworkConfig memory networkConfig = helperConfig
@@ -21,7 +20,7 @@ contract DeployRaffle is Script {
             networkConfig.callbackGasLimit,
             participantsCount,
             networkConfig.subscriptionId,
-            minEntryFee
+            networkConfig.entranceFee
         );
         vm.stopBroadcast();
 
