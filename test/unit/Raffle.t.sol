@@ -17,12 +17,15 @@ contract RaffleTest is Test {
     uint256 subscriptionId;
     uint256 minEntryFee;
 
+    address owner;
+
     function setUp() external {
         DeployRaffle deployRaffle = new DeployRaffle();
         (raffle, helperConfig) = deployRaffle.run(PARTICIPANTS_COUNT);
         HelperConfig.NetworkConfig memory networkConfig = helperConfig
             .getConfig();
 
+        owner = raffle.owner();
         vrfCoordinatorV2_5 = networkConfig.vrfCoordinatorV2_5;
         keyHash = networkConfig.keyHash;
         callbackGasLimit = networkConfig.callbackGasLimit;
@@ -37,5 +40,16 @@ contract RaffleTest is Test {
         assertEq(address(raffle.s_vrfCoordinator()), vrfCoordinatorV2_5);
         assertEq(raffle.getSubscriptionId(), subscriptionId);
         assertEq(raffle.getCallbackGasLimit(), callbackGasLimit);
+    }
+
+    function test_setMinParticipantsCount() public {
+        vm.prank(owner);
+        raffle.setMinParticipantsCount(PARTICIPANTS_COUNT);
+        assertEq(raffle.getParticipantsCount(), PARTICIPANTS_COUNT);
+    }
+
+    function testRevert_setMinParticipantsCount() public {
+        vm.expectRevert("Only callable by owner");
+        raffle.setMinParticipantsCount(PARTICIPANTS_COUNT);
     }
 }
