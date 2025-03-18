@@ -20,7 +20,7 @@ contract DeployRaffle is Script {
             networkConfig.callbackGasLimit,
             participantsCount,
             networkConfig.subscriptionId,
-            networkConfig.entranceFee
+            networkConfig.minEntryFee
         );
         vm.stopBroadcast();
 

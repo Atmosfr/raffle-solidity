@@ -27,7 +27,7 @@ contract HelperConfig is Constants, Script {
         bytes32 keyHash;
         uint32 callbackGasLimit;
         address linkToken;
-        uint256 entranceFee;
+        uint256 minEntryFee;
         address account;
     }
 
@@ -69,7 +69,7 @@ contract HelperConfig is Constants, Script {
                 keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
                 callbackGasLimit: CALLBACK_GAS_LIMIT,
                 linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
-                entranceFee: 0.001 ether,
+                minEntryFee: 0.001 ether,
                 account: 0x733E5e0E250f9b21F13507F7e3a415eb64e366eb
             });
     }
@@ -99,7 +99,7 @@ contract HelperConfig is Constants, Script {
             callbackGasLimit: CALLBACK_GAS_LIMIT,
             subscriptionId: subId,
             linkToken: address(linkToken),
-            entranceFee: 0.001 ether,
+            minEntryFee: 0.001 ether,
             account: DEFAULT_SENDER
         });
 

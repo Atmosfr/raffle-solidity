@@ -15,7 +15,7 @@ contract RaffleTest is Test {
     bytes32 keyHash;
     uint32 callbackGasLimit;
     uint256 subscriptionId;
-    uint256 entranceFee;
+    uint256 minEntryFee;
 
     function setUp() external {
         DeployRaffle deployRaffle = new DeployRaffle();
@@ -27,12 +27,12 @@ contract RaffleTest is Test {
         keyHash = networkConfig.keyHash;
         callbackGasLimit = networkConfig.callbackGasLimit;
         subscriptionId = networkConfig.subscriptionId;
-        entranceFee = networkConfig.entranceFee;
+        minEntryFee = networkConfig.minEntryFee;
     }
 
     function test_constructor() public view {
         assertEq(raffle.getParticipantsCount(), PARTICIPANTS_COUNT);
-        assertEq(raffle.getMinEntryFee(), entranceFee);
+        assertEq(raffle.getMinEntryFee(), minEntryFee);
         assertEq(raffle.getKeyHash(), keyHash);
         assertEq(address(raffle.s_vrfCoordinator()), vrfCoordinatorV2_5);
         //assertEq(raffle.getSubscriptionId(), subscriptionId);
