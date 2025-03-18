@@ -7,6 +7,7 @@ import {Raffle} from "../../src/Raffle.sol";
 
 contract RaffleTest is Test {
     uint8 constant PARTICIPANTS_COUNT = 2;
+    uint256 constant USER_AMOUNT = 1 ether;
 
     Raffle raffle;
     HelperConfig helperConfig;
@@ -51,5 +52,22 @@ contract RaffleTest is Test {
     function testRevert_setMinParticipantsCount() public {
         vm.expectRevert("Only callable by owner");
         raffle.setMinParticipantsCount(PARTICIPANTS_COUNT);
+    }
+
+    function test_enterRaffle() public {
+        address alice = makeAddr("alice");
+        hoax(alice, USER_AMOUNT);
+        vm.expectEmit(true, false, false, true, address(raffle));
+        emit Raffle.ParticipantEntered(alice, USER_AMOUNT);
+        raffle.enterRaffle{value: USER_AMOUNT}();
+
+        assertEq(raffle.getParticipantEntered(alice), true);
+        assertEq(raffle.getParticipants()[0], alice);
+
+        uint256 feeRate = raffle.getFeeRate();
+        uint256 fee = USER_AMOUNT / feeRate;
+        assertEq(raffle.getFeesCollected(), fee);
+
+        assertEq(raffle.getCurrentWinnerPrize(), USER_AMOUNT - fee);
     }
 }
