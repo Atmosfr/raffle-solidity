@@ -162,6 +162,10 @@ contract Raffle is AutomationCompatibleInterface, VRFConsumerBaseV2Plus {
         return i_callbackGasLimit;
     }
 
+    function getState() external view returns (State) {
+        return s_state;
+    }
+
     function getParticipants()
         external
         view
