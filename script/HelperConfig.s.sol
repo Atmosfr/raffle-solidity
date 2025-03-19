@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Script} from "forge-std/Script.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
-import {MockLinkToken} from "@chainlink/contracts/src/v0.8/mocks/MockLinkToken.sol";
+import {LinkToken} from "test/mocks/LinkToken.sol";
 
 contract Constants {
     int256 internal constant MOCK_WEI_PER_UINT_LINK = 4e15;
@@ -87,7 +87,7 @@ contract HelperConfig is Constants, Script {
             MOCK_WEI_PER_UINT_LINK
         );
 
-        MockLinkToken linkToken = new MockLinkToken();
+        LinkToken linkToken = new LinkToken();
 
         uint256 subId = vrfCoordinatorV2_5.createSubscription();
 
