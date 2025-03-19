@@ -28,6 +28,9 @@ contract RaffleTest is Test {
     modifier raffledEntered() {
         vm.prank(alice);
         raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
+
+        vm.prank(bob);
+        raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
         _;
     }
 
@@ -108,9 +111,6 @@ contract RaffleTest is Test {
     }
 
     function testRevert_enterRaffleNotOpened() public raffledEntered {
-        vm.prank(bob);
-        raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
-
         vm.prank(owner);
         raffle.performUpkeep("");
 
@@ -157,4 +157,28 @@ contract RaffleTest is Test {
         vm.expectRevert(Raffle.Raffle__FailedToPay.selector);
         raffle.withdrawFees(address(raffle));
     }
+
+    /* CHECK UPKEEP */
+
+    function test_checkUpkeepReturnsTrue() public raffledEntered {
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+        assertEq(upkeepNeeded, true);
+    }
+
+    function test_checkUpkeepStateClosed() public raffledEntered {
+        vm.prank(owner);
+        raffle.performUpkeep("");
+
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+        assertEq(upkeepNeeded, false);
+    }
+
+    function test_checkUpkeepNotEnoughParticipants() public {
+        vm.prank(alice);
+        raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
+
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+        assertEq(upkeepNeeded, false);
+    }
+
 }
