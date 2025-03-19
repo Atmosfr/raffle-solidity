@@ -2,14 +2,18 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {DeployRaffle, HelperConfig} from "script/DeployRaffle.s.sol";
 import {Raffle} from "../../src/Raffle.sol";
 import {AddConsumer} from "../../script/Interactions.s.sol";
+import {LinkToken} from "test/mocks/LinkToken.sol";
+import {Constants} from "script/HelperConfig.s.sol";
 
-contract RaffleTest is Test {
+contract RaffleTest is Test, Constants {
     uint8 constant PARTICIPANTS_COUNT = 2;
     uint256 constant USER_AMOUNT = 1 ether;
     uint256 constant AMOUNT_TO_ENTER = 0.1 ether;
+    uint256 constant LINK_BALANCE = 100 ether;
 
     Raffle raffle;
     AddConsumer addConsumer;
@@ -20,6 +24,7 @@ contract RaffleTest is Test {
     uint32 callbackGasLimit;
     uint256 subscriptionId;
     uint256 minEntryFee;
+    LinkToken link;
 
     address owner;
     address alice = makeAddr("alice");
@@ -58,6 +63,18 @@ contract RaffleTest is Test {
         callbackGasLimit = networkConfig.callbackGasLimit;
         subscriptionId = networkConfig.subscriptionId;
         minEntryFee = networkConfig.minEntryFee;
+        link = LinkToken(networkConfig.linkToken);
+
+        vm.startPrank(msg.sender);
+        if (block.chainid == LOCAL_CHAIN_ID) {
+            link.mint(msg.sender, LINK_BALANCE);
+            VRFCoordinatorV2_5Mock(vrfCoordinatorV2_5).fundSubscription(
+                subscriptionId,
+                LINK_BALANCE
+            );
+        }
+        link.approve(vrfCoordinatorV2_5, LINK_BALANCE);
+        vm.stopPrank();
     }
 
     function test_constructor() public view {
@@ -181,4 +198,45 @@ contract RaffleTest is Test {
         assertEq(upkeepNeeded, false);
     }
 
+    /* PERFORM UPKEEP */
+    function test_performUpkeep() public raffledEntered {
+        vm.prank(owner);
+        vm.expectEmit(false, false, false, false, address(raffle));
+        emit Raffle.WinnerRequested();
+        raffle.performUpkeep("");
+
+        assertEq(uint8(raffle.getState()), uint8(Raffle.State.Closed));
+    }
+
+    function testRevert_performUpkeepUpkeepNotNeeded() public {
+        vm.expectRevert(Raffle.Raffle__UpkeepNotNeeded.selector);
+        raffle.performUpkeep("");
+    }
+
+    /* FULFILL RANDOM WORDS */
+
+    function test_fulfillRandomWords() public raffledEntered {
+        raffle.performUpkeep("");
+
+        uint256 requestId = 1;
+        uint256 prize = raffle.getCurrentWinnerPrize();
+        uint256 bobBalanceBefore = bob.balance;
+
+        vm.expectEmit(true, false, false, true, address(raffle));
+        emit Raffle.WinnerPaid(bob, prize);
+        VRFCoordinatorV2_5Mock(vrfCoordinatorV2_5).fulfillRandomWords(
+            requestId,
+            address(raffle)
+        );
+
+        uint256 bobBalanceAfter = bob.balance;
+
+        assertEq(uint8(raffle.getState()), uint8(Raffle.State.Opened));
+        assertEq(raffle.getLastWinner(), bob);
+        assertEq(raffle.getParticipants().length, 0);
+        assertEq(raffle.getParticipantEntered(bob), false);
+        assertEq(raffle.getParticipantEntered(alice), false);
+        assertEq(raffle.getCurrentWinnerPrize(), 0);
+        assertEq(bobBalanceAfter, bobBalanceBefore + prize);
+    }
 }
