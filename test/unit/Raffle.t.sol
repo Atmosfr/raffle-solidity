@@ -25,6 +25,12 @@ contract RaffleTest is Test {
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
 
+    modifier raffledEntered() {
+        vm.prank(alice);
+        raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
+        _;
+    }
+
     function setUp() external {
         DeployRaffle deployRaffle = new DeployRaffle();
         (raffle, helperConfig) = deployRaffle.run(PARTICIPANTS_COUNT);
@@ -66,10 +72,12 @@ contract RaffleTest is Test {
         assertEq(raffle.getParticipantsCount(), PARTICIPANTS_COUNT);
     }
 
-    function testRevert_setMinParticipantsCount() public {
+    function testRevert_setMinParticipantsCountNotOwner() public {
         vm.expectRevert("Only callable by owner");
         raffle.setMinParticipantsCount(PARTICIPANTS_COUNT);
     }
+
+    /* ENTER RAFFLE */
 
     function test_enterRaffle() public {
         vm.prank(alice);
@@ -87,10 +95,7 @@ contract RaffleTest is Test {
         assertEq(raffle.getCurrentWinnerPrize(), USER_AMOUNT - fee);
     }
 
-    function testRevert_enterRaffleAlreadyEntered() public {
-        vm.prank(alice);
-        raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
-
+    function testRevert_enterRaffleAlreadyEntered() public raffledEntered {
         vm.prank(alice);
         vm.expectRevert(Raffle.Raffle__AlreadyEntered.selector);
         raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
@@ -102,10 +107,7 @@ contract RaffleTest is Test {
         raffle.enterRaffle{value: 0}();
     }
 
-    function testRevert_enterRaffleNotOpened() public {
-        vm.prank(alice);
-        raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
-
+    function testRevert_enterRaffleNotOpened() public raffledEntered {
         vm.prank(bob);
         raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
 
@@ -115,5 +117,44 @@ contract RaffleTest is Test {
         vm.prank(alice);
         vm.expectRevert(Raffle.Raffle__NotOpened.selector);
         raffle.enterRaffle{value: AMOUNT_TO_ENTER}();
+    }
+
+    /* WITHDRAW FEES */
+    function test_withdrawFees() public raffledEntered {
+        uint256 balanceBefore = owner.balance;
+        uint256 fees = raffle.getFeesCollected();
+
+        vm.prank(owner);
+        vm.expectEmit(true, false, false, true, address(raffle));
+        emit Raffle.FeeWithdrawn(owner, fees);
+        raffle.withdrawFees(owner);
+
+        uint256 balanceAfter = owner.balance;
+
+        assertEq(balanceAfter, balanceBefore + fees);
+        assertEq(raffle.getFeesCollected(), 0);
+    }
+
+    function testRevert_withdrawFees() public {
+        vm.expectRevert("Only callable by owner");
+        raffle.withdrawFees(owner);
+    }
+
+    function testRevert_withdrawFeesZeroAddress() public raffledEntered {
+        vm.prank(owner);
+        vm.expectRevert(Raffle.Raffle__ZeroAddress.selector);
+        raffle.withdrawFees(address(0));
+    }
+
+    function testRevert_withdrawFeesZeroAmount() public {
+        vm.prank(owner);
+        vm.expectRevert(Raffle.Raffle__ZeroAmount.selector);
+        raffle.withdrawFees(owner);
+    }
+
+    function testRevert_withdrawFeesFailedToPay() public raffledEntered {
+        vm.prank(owner);
+        vm.expectRevert(Raffle.Raffle__FailedToPay.selector);
+        raffle.withdrawFees(address(raffle));
     }
 }
